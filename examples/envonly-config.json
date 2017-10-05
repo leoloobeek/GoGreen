@@ -1,0 +1,26 @@
+{
+    "Language": "jscript",
+
+    "StartDir": "",
+    "PathKey": "",
+
+    "EnvVars": {
+        "ALLUSERSPROFILE": "",
+        "APPDATA": "",
+        "COMPUTERNAME": "COMPUTER",
+        "HOMEDRIVE": "",
+        "HOMEPATH": "",
+        "LOGONSERVER": "",
+        "NUMBER_OF_PROCESSORS": "",
+        "OS": "",
+        "PROCESSOR_ARCHITECTURE": "AMD64",
+        "USERDOMAIN": "",
+        "USERDOMAIN_ROAMINGPROFILE": "",
+        "USERNAME": "leo",
+        "USERPROFILE": "",
+        "windir": ""
+    },
+
+    "Payload": "",
+    "PayloadPath": "exploit.js"
+}
