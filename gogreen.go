@@ -6,10 +6,11 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"gogreen/lib"
 	"io/ioutil"
 	"os"
 	"strings"
+	
+	"github.com/GoGreen/lib"
 )
 
 func main() {
