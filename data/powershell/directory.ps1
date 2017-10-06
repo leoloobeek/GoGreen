@@ -1,1 +1,1 @@
-$allPaths += Get-ChildItem "~STARTDIR~" -Recurse -Force -ErrorAction SilentlyContinue | %{$_.FullName}
+$allPaths += Get-ChildItem "~STARTDIR~" -Recurse -Depth ~DEPTH~ -Force -ErrorAction SilentlyContinue | %{$_.FullName}

@@ -2,7 +2,8 @@
     "Language": "jscript",
 
     "StartDir": "C:\\Program Files (x86)",
-    "PathKey": "C:\\Program Files (x86)\\Microsoft Office\\root\\Office16\\EXCEL.EXE",
+    "Depth": "3",
+    "PathKey": "C:\\Program Files (x86)\\Microsoft Office\\root",
 
     "EnvVars": {
         "USERNAME":                 "leo",

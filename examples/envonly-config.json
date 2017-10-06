@@ -2,6 +2,7 @@
     "Language": "jscript",
 
     "StartDir": "",
+    "Depth": "",
     "PathKey": "",
 
     "EnvVars": {

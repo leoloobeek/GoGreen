@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
-	
+
 	"github.com/leoloobeek/GoGreen/lib"
 )
 
@@ -58,7 +58,7 @@ func main() {
 	}
 
 	// if a StartDir was specified in config.json, add in directory walking
-	result, err = directoryCode(result, config.StartDir, payloadWriter)
+	result, err = directoryCode(result, config.StartDir, config.Depth, payloadWriter)
 	if err != nil {
 		return
 	}
@@ -93,6 +93,7 @@ func main() {
 type Config struct {
 	Language    string
 	StartDir    string
+	Depth       string
 	PathKey     string
 	EnvVars     map[string]string
 	Payload     string
@@ -192,7 +193,7 @@ func getFilenames(lang string) (string, string) {
 	}
 }
 
-func directoryCode(text []byte, startDir string, pw *PayloadWriter) ([]byte, error) {
+func directoryCode(text []byte, startDir, depth string, pw *PayloadWriter) ([]byte, error) {
 	if startDir != "" {
 		contents, err := readFile(pw.DirTemplate)
 		if err != nil {
@@ -205,8 +206,15 @@ func directoryCode(text []byte, startDir string, pw *PayloadWriter) ([]byte, err
 			startDir = strings.Replace(startDir, "\\", "\\\\", -1)
 		}
 
+		// To save on payload code size just assigning
+		// a huge number for now
+		if depth == "" {
+			depth = "100000"
+		}
+
 		result := bytes.Replace(text, []byte("~WALKOS~"), contents, 1)
 		result = bytes.Replace(result, []byte("~STARTDIR~"), []byte(startDir), 1)
+		result = bytes.Replace(result, []byte("~DEPTH~"), []byte(depth), 1)
 
 		return result, nil
 	}

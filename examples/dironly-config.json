@@ -2,6 +2,7 @@
     "Language": "powershell",
 
     "StartDir": "C:\\Program Files (x86)",
+    "Depth": "",
     "PathKey": "C:\\Program Files (x86)\\Microsoft Office\\root\\Office16\\EXCEL.EXE",
 
     "EnvVars": {},

@@ -1,11 +1,13 @@
-Function WalkOS(allPaths,fso,folder)
+Function WalkOS(allPaths,fso,folder,depth)
     dim files
-    allPaths.add(fso.GetAbsolutePathName(folder))    
     For Each Subfolder In folder.SubFolders
-        On Error Resume Next
-        WalkOS allPaths,fso,Subfolder
-        If Err.Number <> 0 Then
-            return
+        allPaths.add(fso.GetAbsolutePathName(Subfolder))
+        If depth > 0 Then
+            On Error Resume Next
+            WalkOS allPaths,fso,Subfolder,(depth-1)
+            If Err.Number <> 0 Then
+                return
+            End If
         End If
     Next
     For Each file In folder.Files
@@ -18,4 +20,4 @@ startDir = "~STARTDIR~"
 Set objFSO = CreateObject("Scripting.FileSystemObject")
 
 Set startDirObject = objFSO.GetFolder(startDir)
-WalkOS allPaths,objFSO,startDirObject
+WalkOS allPaths,objFSO,startDirObject,~DEPTH~
