@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 	
-	"github.com/GoGreen/lib"
+	"github.com/leoloobeek/GoGreen/lib"
 )
 
 func main() {
