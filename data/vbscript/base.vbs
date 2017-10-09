@@ -41,7 +41,7 @@ function compareHash(decrypted, hash)
     dim sha512, text, newHash
     set sha512 = CreateObject("System.Security.Cryptography.SHA512Managed")
     set text = CreateObject("System.Text.ASCIIEncoding")
-    newHash = getSHA512(decrypted)
+    newHash = getSHA512(Mid(decrypted, 1, (len(decrypted) - ~MINUSBYTES~)))
     If newHash = hash Then
         compareHash = True
     Else

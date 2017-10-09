@@ -39,7 +39,7 @@ function getSHA512(bytes) {
 function compareHash(decrypted, hash) {
     var sha512 = new ActiveXObject("System.Security.Cryptography.SHA512Managed");
     var text = new ActiveXObject("System.Text.ASCIIEncoding");
-    var newHash = getSHA512(decrypted);
+    var newHash = getSHA512(decrypted.substring(0, (decrypted.length - ~MINUSBYTES~)));
     if(newHash == hash) {
         return true;
     }

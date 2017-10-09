@@ -6,7 +6,8 @@ function Get-Environmental
     }
     function Compare-SHA512Hashes {
         param($a)
-        if((Get-SHA512Hash $a) -eq "~PAYLOADHASH~") {
+        $end = $a.Length - ~MINUSBYTES~ - 1
+        if((Get-SHA512Hash $($a[0..$end] -join "")) -eq "~PAYLOADHASH~") {
             return $true
         }
         else { return $false }

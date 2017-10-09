@@ -2,11 +2,11 @@
     "Language": "jscript",
 
     "StartDir": "C:\\Program Files (x86)",
-    "Depth": "3",
+    "Depth": "2",
     "PathKey": "C:\\Program Files (x86)\\Microsoft Office\\root",
 
     "EnvVars": {
-        "USERNAME":                 "leo",
+        "USERNAME":                 "username",
         "COMPUTERNAME":             "",
         "USERDNSDOMAIN":            "",
         "PROCESSOR_ARCHITECTURE":   "",
@@ -14,5 +14,6 @@
     },
 
     "Payload": "WScript.Echo(\"Hello\")",
-    "PayloadPath": ""
+    "PayloadPath": "",
+    "MinusBytes": "3"
 }

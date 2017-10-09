@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/leoloobeek/GoGreen/lib"
@@ -44,7 +45,11 @@ func main() {
 	}
 
 	// generate payload hash and key
-	payloadHash := lib.GenerateSHA512(payload)
+	payloadHash, err := genPayloadHash(payload, config.MinusBytes)
+	if err != nil {
+		fmt.Printf("[!] Error generating payload hash. Is MinusBytes an int?\nError: %s\n", err)
+		return
+	}
 	if config.StartDir == "" {
 		config.PathKey = ""
 	}
@@ -81,11 +86,13 @@ func main() {
 	result = bytes.Replace(result, []byte("~AESIVBASE64~"), []byte(iv), 1)
 	result = bytes.Replace(result, []byte("~ENCRYPTEDBASE64~"), []byte(text), 1)
 	result = bytes.Replace(result, []byte("~PAYLOADHASH~"), []byte(payloadHash), 1)
+	result = bytes.Replace(result, []byte("~MINUSBYTES~"), []byte(string(config.MinusBytes)), 1)
 
 	writeFile(payloadWriter.Outfile, result)
 	fmt.Println("[*] Output File:        " + payloadWriter.Outfile)
 	fmt.Println("[*] Environmental Keys: " + key)
 	fmt.Println("[*] Decryption Key:     " + keyHash)
+	fmt.Println("[*] Payload Hash:       " + payloadHash)
 
 }
 
@@ -98,6 +105,7 @@ type Config struct {
 	EnvVars     map[string]string
 	Payload     string
 	PayloadPath string
+	MinusBytes  string
 }
 
 // PayloadWriter for handling what to write
@@ -191,6 +199,19 @@ func getFilenames(lang string) (string, string) {
 	default:
 		return "", ""
 	}
+}
+
+func genPayloadHash(payload, minusBytes string) (string, error) {
+	mb, err := strconv.Atoi(minusBytes)
+	if err != nil {
+		return "", err
+	}
+	if mb > len(payload) || mb < 0 {
+		fmt.Println("[!] MinusBytes is less than 0 or greater than payload size, setting to 1")
+		mb = 1
+	}
+	payloadHash := lib.GenerateSHA512(payload[:(len(payload) - mb)])
+	return payloadHash, nil
 }
 
 func directoryCode(text []byte, startDir, depth string, pw *PayloadWriter) ([]byte, error) {
