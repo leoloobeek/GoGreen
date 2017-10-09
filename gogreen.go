@@ -55,10 +55,9 @@ func main() {
 	}
 	key, envVarOrder := buildKey(config.EnvVars, config.PathKey)
 
-	// read in "master" template
-	result, err := readFile(payloadWriter.MasterTemplate)
+	// read in base code
+	result, err := baseCode(config.WSHAutoVersion, payloadWriter)
 	if err != nil {
-		fmt.Printf("[!] Unable to read %s\n", (payloadWriter.MasterTemplate))
 		return
 	}
 
@@ -98,52 +97,58 @@ func main() {
 
 // Config defines structure to be read from config.json
 type Config struct {
-	Language    string
-	StartDir    string
-	Depth       string
-	PathKey     string
-	EnvVars     map[string]string
-	Payload     string
-	PayloadPath string
-	MinusBytes  string
+	Language       string
+	WSHAutoVersion string
+	StartDir       string
+	Depth          string
+	PathKey        string
+	EnvVars        map[string]string
+	Payload        string
+	PayloadPath    string
+	MinusBytes     string
 }
 
 // PayloadWriter for handling what to write
 type PayloadWriter struct {
-	Language       string
-	MasterTemplate string
-	DirTemplate    string
-	EnvKeyTemplate string
-	EnvKeyCode     string
-	Outfile        string
+	Language            string
+	WSHAutoVersion      string
+	BaseTemplate        string
+	DirTemplate         string
+	EnvKeyTemplate      string
+	AutoVersionTemplate string
+	EnvKeyCode          string
+	Outfile             string
 }
 
 func setupPayloadWriter(lang string) *PayloadWriter {
 	switch lang {
 	case "vbscript":
 		return &PayloadWriter{
-			Language:       "vbscript",
-			MasterTemplate: "data/vbscript/base.vbs",
-			DirTemplate:    "data/vbscript/directory.vbs",
-			EnvKeyTemplate: "data/vbscript/envkey.vbs",
-			EnvKeyCode:     "oEnv(\"%s\")",
-			Outfile:        "payload.vbs"}
+			Language:            "vbscript",
+			BaseTemplate:        "data/vbscript/base.vbs",
+			DirTemplate:         "data/vbscript/directory.vbs",
+			EnvKeyTemplate:      "data/vbscript/envkey.vbs",
+			AutoVersionTemplate: "data/vbscript/autoversion.vbs",
+			EnvKeyCode:          "oEnv(\"%s\")",
+			Outfile:             "payload.vbs"}
 	case "jscript":
 		return &PayloadWriter{
-			Language:       "jscript",
-			MasterTemplate: "data/jscript/base.js",
-			DirTemplate:    "data/jscript/directory.js",
-			EnvKeyTemplate: "data/jscript/envkey.js",
-			EnvKeyCode:     "oEnv(\"%s\")",
-			Outfile:        "payload.js"}
+			Language:            "jscript",
+			BaseTemplate:        "data/jscript/base.js",
+			DirTemplate:         "data/jscript/directory.js",
+			EnvKeyTemplate:      "data/jscript/envkey.js",
+			AutoVersionTemplate: "data/jscript/autoversion.js",
+			EnvKeyCode:          "oEnv(\"%s\")",
+			Outfile:             "payload.js"}
 	case "powershell":
 		return &PayloadWriter{
-			Language:       "powershell",
-			MasterTemplate: "data/powershell/base.ps1",
-			DirTemplate:    "data/powershell/directory.ps1",
-			EnvKeyTemplate: "data/powershell/envkey.ps1",
-			EnvKeyCode:     "$oEnv.Invoke(\"%s\")",
-			Outfile:        "payload.ps1"}
+			Language:            "powershell",
+			BaseTemplate:        "data/powershell/base.ps1",
+			DirTemplate:         "data/powershell/directory.ps1",
+			EnvKeyTemplate:      "data/powershell/envkey.ps1",
+			AutoVersionTemplate: "",
+			EnvKeyCode:          "$oEnv.Invoke(\"%s\")",
+			Outfile:             "payload.ps1"}
 	default:
 		return nil
 	}
@@ -214,6 +219,31 @@ func genPayloadHash(payload, minusBytes string) (string, error) {
 	return payloadHash, nil
 }
 
+// Get base code to start
+func baseCode(autoVersion string, pw *PayloadWriter) ([]byte, error) {
+	baseCode, err := readFile(pw.BaseTemplate)
+	if err != nil {
+		fmt.Printf("[!] Unable to read %s\n", (pw.BaseTemplate))
+		return nil, err
+	}
+
+	if pw.AutoVersionTemplate != "" {
+		if strings.ToLower(autoVersion) == "yes" {
+			av, err := readFile(pw.AutoVersionTemplate)
+			if err != nil {
+				fmt.Printf("[!] Unable to read %s\n", (pw.AutoVersionTemplate))
+				return nil, err
+			}
+			baseCode = bytes.Replace(baseCode, []byte("~AUTOVERSION~"), []byte(av), 1)
+		} else {
+			baseCode = bytes.Replace(baseCode, []byte("~AUTOVERSION~"), []byte(""), 1)
+		}
+	}
+
+	return baseCode, nil
+}
+
+// Get directory code for directory walking
 func directoryCode(text []byte, startDir, depth string, pw *PayloadWriter) ([]byte, error) {
 	if startDir != "" {
 		contents, err := readFile(pw.DirTemplate)

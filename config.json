@@ -1,6 +1,7 @@
 {
     "Language": "jscript",
-
+    "WSHAutoVersion": "Yes",
+    
     "StartDir": "C:\\Program Files (x86)",
     "Depth": "2",
     "PathKey": "C:\\Program Files (x86)\\Microsoft Office\\root",

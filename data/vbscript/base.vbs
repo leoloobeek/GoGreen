@@ -1,3 +1,4 @@
+~AUTOVERSION~
 Function decryptAES(decryptMe, key)
     dim aes, a, encBytes, encLen, decrypted, numPads
     set aes = CreateObject("System.Security.Cryptography.RijndaelManaged")

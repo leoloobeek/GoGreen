@@ -1,5 +1,6 @@
 {
     "Language": "powershell",
+    "WSHAutoVersion": "",    
 
     "StartDir": "C:\\Program Files (x86)",
     "Depth": "",
@@ -8,5 +9,6 @@
     "EnvVars": {},
 
     "Payload": "Write-Host hello",
-    "PayloadPath": ""
+    "PayloadPath": "",
+    "MinusBytes": "3"
 }

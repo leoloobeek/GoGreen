@@ -1,5 +1,6 @@
 {
     "Language": "jscript",
+    "WSHAutoVersion": "Yes",
 
     "StartDir": "",
     "Depth": "",
@@ -23,5 +24,6 @@
     },
 
     "Payload": "",
-    "PayloadPath": "exploit.js"
+    "PayloadPath": "exploit.js",
+    "MinusBytes": "3"
 }

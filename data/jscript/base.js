@@ -1,3 +1,4 @@
+~AUTOVERSION~
 function decryptAES(decryptMe, key) { 
     var aes = new ActiveXObject("System.Security.Cryptography.RijndaelManaged");
     var a = new ActiveXObject("System.Text.ASCIIEncoding");
