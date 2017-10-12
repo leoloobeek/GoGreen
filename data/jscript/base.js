@@ -25,11 +25,11 @@ function decodeBase64(base64) {
 }
 function binToHex(binary) {
     var dom = new ActiveXObject("Microsoft.XMLDOM");
-    dom.loadXML("<W00t/>");
-    dom.documentElement.dataType = "bin.hex";
-    dom.documentElement.nodeTypedValue = binary;
-    dom.documentElement.removeAttribute("dt:dt");
-    return dom.documentElement.nodeTypedValue;
+    var el = dom.createElement("tmp");
+    el.dataType = "bin.hex";
+    el.nodeTypedValue = binary;
+    el.removeAttribute("dt:dt");
+    return el.nodeTypedValue
 }
 function getSHA512(bytes) {
     var sha512 = new ActiveXObject("System.Security.Cryptography.SHA512Managed");
