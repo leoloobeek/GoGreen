@@ -1,0 +1,24 @@
+{
+    "Language": "jscript",
+    "WSHAutoVersion": "Yes",
+    
+    "StartDir": "",
+    "Depth": "",
+    "PathKey": "",
+
+    "EnvVars": {
+        "USERNAME":                 "username",
+        "COMPUTERNAME":             "",
+        "USERDNSDOMAIN":            "domain",
+        "PROCESSOR_ARCHITECTURE":   "amd64",
+        "LOGONSERVER":              ""
+    },
+
+    "Payload": "Write-Host Hello",
+    "PayloadPath": "",
+    "MinusBytes": "3",
+
+    "HttpKeyUrl": "https://site.com/page-you-control",
+    "HttpKeyUA": "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)",
+	"HttpKeyRetry": "300"
+}

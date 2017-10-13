@@ -25,5 +25,9 @@
 
     "Payload": "",
     "PayloadPath": "exploit.js",
-    "MinusBytes": "3"
+    "MinusBytes": "3",
+
+    "HttpKeyUrl": "",
+    "HttpKeyUA": "",
+	"HttpKeyRetry": ""
 }

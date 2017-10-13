@@ -44,6 +44,16 @@ func main() {
 		}
 	}
 
+	// Apply httpkey here (if needed)
+	httpKey := ""
+	if config.HttpKeyUrl != "" {
+		var err error
+		payload, httpKey, err = httpKeyCode(payload, config, payloadWriter)
+		if err != nil {
+			return
+		}
+	}
+
 	// generate payload hash and key
 	payloadHash, err := genPayloadHash(payload, config.MinusBytes)
 	if err != nil {
@@ -92,6 +102,9 @@ func main() {
 	fmt.Println("[*] Environmental Keys: " + key)
 	fmt.Println("[*] Decryption Key:     " + keyHash)
 	fmt.Println("[*] Payload Hash:       " + payloadHash)
+	if httpKey != "" {
+		fmt.Println("[*] HTTP Key:           " + httpKey)
+	}
 
 }
 
@@ -106,6 +119,9 @@ type Config struct {
 	Payload        string
 	PayloadPath    string
 	MinusBytes     string
+	HttpKeyUrl     string
+	HttpKeyUA      string
+	HttpKeyRetry   string
 }
 
 // PayloadWriter for handling what to write
@@ -116,6 +132,7 @@ type PayloadWriter struct {
 	DirTemplate         string
 	EnvKeyTemplate      string
 	AutoVersionTemplate string
+	HttpKeyTemplate     string
 	EnvKeyCode          string
 	Outfile             string
 }
@@ -129,6 +146,7 @@ func setupPayloadWriter(lang string) *PayloadWriter {
 			DirTemplate:         "data/vbscript/directory.vbs",
 			EnvKeyTemplate:      "data/vbscript/envkey.vbs",
 			AutoVersionTemplate: "data/vbscript/autoversion.vbs",
+			HttpKeyTemplate:     "data/vbscript/httpkey.vbs",
 			EnvKeyCode:          "oEnv(\"%s\")",
 			Outfile:             "payload.vbs"}
 	case "jscript":
@@ -138,6 +156,7 @@ func setupPayloadWriter(lang string) *PayloadWriter {
 			DirTemplate:         "data/jscript/directory.js",
 			EnvKeyTemplate:      "data/jscript/envkey.js",
 			AutoVersionTemplate: "data/jscript/autoversion.js",
+			HttpKeyTemplate:     "data/jscript/httpkey.js",
 			EnvKeyCode:          "oEnv(\"%s\")",
 			Outfile:             "payload.js"}
 	case "powershell":
@@ -147,6 +166,7 @@ func setupPayloadWriter(lang string) *PayloadWriter {
 			DirTemplate:         "data/powershell/directory.ps1",
 			EnvKeyTemplate:      "data/powershell/envkey.ps1",
 			AutoVersionTemplate: "",
+			HttpKeyTemplate:     "data/powershell/httpkey.ps1",
 			EnvKeyCode:          "$oEnv.Invoke(\"%s\")",
 			Outfile:             "payload.ps1"}
 	default:
@@ -297,6 +317,36 @@ func envVarCode(text []byte, envVarCode []string, pw *PayloadWriter) ([]byte, er
 	}
 	result := bytes.Replace(text, []byte("~ENVVAR~"), []byte(""), 1)
 	return result, nil
+}
+
+// returns the new payload, httpkey, and err
+func httpKeyCode(payload string, config *Config, pw *PayloadWriter) (string, string, error) {
+	httpKey, err := lib.GenerateHttpKey(config.HttpKeyUrl, config.HttpKeyUA)
+	if err != nil {
+		fmt.Printf("[!] Error accessing %s\n%s\n", config.HttpKeyUrl, err)
+		return "", "", err
+	}
+
+	payloadHash := lib.GenerateSHA512(payload)
+	text, iv, err := lib.AESEncrypt([]byte(httpKey), []byte(payload))
+	if err != nil {
+		fmt.Printf("Error received encrypting: %s", err)
+		return "", "", err
+	}
+
+	contents, err := readFile(pw.HttpKeyTemplate)
+	if err != nil {
+		return "", "", err
+	}
+
+	result := bytes.Replace(contents, []byte("~HKPAYLOADHASH~"), []byte(payloadHash), 1)
+	result = bytes.Replace(result, []byte("~HKPAYLOAD~"), []byte(text), 1)
+	result = bytes.Replace(result, []byte("~RETRYNUM~"), []byte(config.HttpKeyRetry), 1)
+	result = bytes.Replace(result, []byte("~HKURL~"), []byte(config.HttpKeyUrl), 1)
+	result = bytes.Replace(result, []byte("~HKUSERAGENT~"), []byte(config.HttpKeyUA), 1)
+	result = bytes.Replace(result, []byte("~HKIV~"), []byte(iv), 1)
+
+	return string(result), httpKey, nil
 }
 
 // buildKey builds the final key with env vars, path, etc. and also returns
