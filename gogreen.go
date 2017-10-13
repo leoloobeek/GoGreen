@@ -37,7 +37,6 @@ func main() {
 			return
 		}
 		payload = string(pFile)
-		fmt.Println(payload)
 		if payload == "" {
 			fmt.Printf("[!] Payload file %s was empty", config.PayloadPath)
 			return
