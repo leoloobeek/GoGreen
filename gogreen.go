@@ -53,12 +53,16 @@ func main() {
 		}
 	}
 
-	// generate payload hash and key
-	payloadHash, err := genPayloadHash(payload, config.MinusBytes)
-	if err != nil {
-		fmt.Printf("[!] Error generating payload hash. Is MinusBytes an int?\nError: %s\n", err)
-		return
+	// generate payload hash
+	mb, err := strconv.Atoi(config.MinusBytes)
+	if (err != nil) || (mb > len(payload) || mb < 0) {
+		fmt.Println("[!] MinusBytes invalid. Is it less than 0 or greater than payload size? Setting to 1...")
+		config.MinusBytes = "1"
+		mb = 1
 	}
+	payloadHash := lib.GenerateSHA512(payload[:(len(payload) - mb)])
+
+	// generate key
 	if config.StartDir == "" {
 		config.PathKey = ""
 	}
@@ -223,19 +227,6 @@ func getFilenames(lang string) (string, string) {
 	default:
 		return "", ""
 	}
-}
-
-func genPayloadHash(payload, minusBytes string) (string, error) {
-	mb, err := strconv.Atoi(minusBytes)
-	if err != nil {
-		return "", err
-	}
-	if mb > len(payload) || mb < 0 {
-		fmt.Println("[!] MinusBytes is less than 0 or greater than payload size, setting to 1")
-		mb = 1
-	}
-	payloadHash := lib.GenerateSHA512(payload[:(len(payload) - mb)])
-	return payloadHash, nil
 }
 
 // Get base code to start
