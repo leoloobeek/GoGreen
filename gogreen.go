@@ -329,6 +329,10 @@ func httpKeyCode(payload string, config *Config, pw *PayloadWriter) (string, str
 		return "", "", err
 	}
 
+	if config.HttpKeyUA == "" {
+		config.HttpKeyUA = "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)"
+	}
+
 	result := bytes.Replace(contents, []byte("~HKPAYLOADHASH~"), []byte(payloadHash), 1)
 	result = bytes.Replace(result, []byte("~HKPAYLOAD~"), []byte(text), 1)
 	result = bytes.Replace(result, []byte("~RETRYNUM~"), []byte(config.HttpKeyRetry), 1)
