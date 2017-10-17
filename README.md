@@ -19,7 +19,7 @@ GoGreen offers environmental keying and HTTP keying to protect your payloads.
 At this time, Environmental Keying options are required, it is not possible to have HTTP keying without Environmental Keying options selected.
 
 ## Using GoGreen
-GoGreen is a Golang project (sorry). Go [here](https://golang.org/doc/install) and get setup with Go. Then you just need the following to download and use the project:
+GoGreen is a Golang project (sorry). The Release section has executables for Windows, Mac and Linux. To use the source go [here](https://golang.org/doc/install) and get setup with Go. Then you just need the following to download and use the project:
 ```
 go get github.com/leoloobeek/GoGreen
 cd $GOPATH/src/github.com/leoloobeek/GoGreen
