@@ -36,7 +36,7 @@ Run with specific config:
 go run gogreen.go -config path/to/config.json
 ```
 
-## How It Works
+## How GoGreen's Env Keying Works
 As mentioned, GoGreen uses file path and/or environment variables as inputs for decrypting the payload. This is done by the payload by spidering/walking the directory tree from a start directory (such as C:\Program Files) and harvesting all file paths found. Next, it reads in all environment variables specified in the code (which is chosen by you in the config file), and creates all possible [combinations](https://en.wikipedia.org/wiki/Combination). Then goes the following steps:
 
 1. Loop through all file paths
@@ -45,7 +45,21 @@ As mentioned, GoGreen uses file path and/or environment variables as inputs for 
 4. Try first 32 chars of sha512 hash above as key
 5. If error, or sha512(decrypted) doesn't match payload hash, move onto next key
 
-For more on the HttpKey piece skip down to [here](#httpkeyurl)
+## How GoGreen's HTTP Keying Works
+If you plan to use HTTP Keying, set HttpKeyUrl to the URL of the site you control. The page you will use for the HTTP Keying must be up and running, and accessible from the machine you're running GoGreen on. 
+
+It's important to note, that if HTTP Keying is used the following execution flow of the payload is as follows:
+1. GoGreen uses environmental keying (directory/env vars) to decrypt and execute code
+2. The code decrypted will handle the HTTP keying, which is executed
+3. The new executed code will go out to HttpKeyUrl and hash the page
+4. The new executed code will use the hash and decrypt and execute your payload
+
+This flow allows us to hide the fact we will be making HTTP connections (and hide New-Object Net.Webclient, etc.).
+
+#### A note about the HttpKey
+Since there's a lot of factors here (different langs, charsets, etc.), GoGreen will write out a "tester file" when using HTTP Keying. Run this file on one of your systems to ensure JScript/VBScript/PowerShell will obtain the same key that Golang/GoGreen obtained. If there's special characters in the source (such as copyright symbol) there's a chance it won't match. If you are dead set on using that site, you can specify a custom HttpKey with `go run gogreen.go -httpkey <httpkey>`. 
+
+To avoid headaches here, its recommended to use a simple web page. Even the standard Microsoft 403 page would be benign and something that would be easy to use.
 
 ## Deployment Considerations
 If you have a StartDir of C:\, the payload will take a very long time to walk the directory tree and harvest all the paths. It will then take a very long time to try each and every path to decrypt. It will also make it harder for a defender to determine which file/folder path is used as the key. The same goes for using many env vars (e.g. 14 env vars = 16383 combos). So there are trade offs.
@@ -93,15 +107,7 @@ If your payload is short, throw the code right into Payload. Otherwise specify t
 This is used in [Ebowla](https://github.com/Genetic-Malware/Ebowla) and a great idea. To ensure valid data is decrypted we have to hash the payload and using MinusBytes essentially hashes (payload - MinusBytes). If you're using the same exact payload but don't want the same hash string in the final source code, switch this up a bit.
 
 #### HttpKeyUrl
-If you plan to use HTTP Keying, set this to the URL of the site you control. The page you will use for the HTTP Keying must be up and running, and accessible from the machine you're running GoGreen on. 
-
-It's important to note, that if HTTP Keying is used the following execution flow of the payload is as follows:
-1. GoGreen uses environmental keying (directory/env vars) to decrypt and execute code
-2. The code decrypted will be HTTP keying, which is executed
-3. The new executed code will go out to HttpKeyUrl and hash the page
-4. The new executed code will use the hash and decrypt and execute your payload
-
-This flow allows us to hide the fact we will be making HTTP connections (and hide New-Object Net.Webclient, etc.).
+The URL of the site you control to hash and use as the encryption key.
 
 #### HttpKeyUA
 The User Agent you want to use for the HTTP request from the target. Helpful if you are using [Apache ModRewrite rules](https://bluescreenofjeff.com/2016-04-12-combatting-incident-responders-with-apache-mod_rewrite/). 
