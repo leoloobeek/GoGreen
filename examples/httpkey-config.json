@@ -14,7 +14,7 @@
         "LOGONSERVER":              ""
     },
 
-    "Payload": "Write-Host Hello",
+    "Payload": "WScript.Echo(\"Hello\")",
     "PayloadPath": "",
     "MinusBytes": "3",
 

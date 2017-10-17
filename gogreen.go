@@ -16,6 +16,7 @@ import (
 
 func main() {
 	conf := flag.String("config", "", "Config file to read. Default ./config.json.")
+	flagHttpKey := flag.String("httpkey", "", "Manual HttpKey to use. GoGreen will retrieve it's own by default.")
 	flag.Parse()
 	config := parseConfig(*conf)
 	if config == nil {
@@ -47,7 +48,7 @@ func main() {
 	httpKey := ""
 	if config.HttpKeyUrl != "" {
 		var err error
-		payload, httpKey, err = httpKeyCode(payload, config, payloadWriter)
+		payload, httpKey, err = httpKeyCode(*flagHttpKey, payload, config, payloadWriter)
 		if err != nil {
 			return
 		}
@@ -91,7 +92,7 @@ func main() {
 	text, iv, err := lib.AESEncrypt([]byte(keyHash), []byte(payload))
 
 	if err != nil {
-		fmt.Printf("Error received encrypting: %s", err)
+		fmt.Printf("[!] Error received encrypting: %s", err)
 		return
 	}
 
@@ -100,13 +101,16 @@ func main() {
 	result = bytes.Replace(result, []byte("~PAYLOADHASH~"), []byte(payloadHash), 1)
 	result = bytes.Replace(result, []byte("~MINUSBYTES~"), []byte(string(config.MinusBytes)), 1)
 
-	writeFile(payloadWriter.Outfile, result)
-	fmt.Println("[*] Output File:        " + payloadWriter.Outfile)
-	fmt.Println("[*] Environmental Keys: " + key)
-	fmt.Println("[*] Decryption Key:     " + keyHash)
-	fmt.Println("[*] Payload Hash:       " + payloadHash)
+	outfile := "payload" + payloadWriter.Extension
+	writeFile(outfile, result)
+
+	fmt.Println("\nPAYLOAD DETAILS-----------------------")
+	fmt.Println("Output File:        " + outfile)
+	fmt.Println("Environmental Keys: " + key)
+	fmt.Println("Decryption Key:     " + keyHash)
+	fmt.Println("Payload Hash:       " + payloadHash)
 	if httpKey != "" {
-		fmt.Println("[*] HTTP Key:           " + httpKey)
+		fmt.Println("HTTP Key:           " + httpKey)
 	}
 
 }
@@ -136,8 +140,9 @@ type PayloadWriter struct {
 	EnvKeyTemplate      string
 	AutoVersionTemplate string
 	HttpKeyTemplate     string
+	HttpKeyTestTemplate string
 	EnvKeyCode          string
-	Outfile             string
+	Extension           string
 }
 
 func setupPayloadWriter(lang string) *PayloadWriter {
@@ -150,8 +155,9 @@ func setupPayloadWriter(lang string) *PayloadWriter {
 			EnvKeyTemplate:      "data/vbscript/envkey.vbs",
 			AutoVersionTemplate: "data/vbscript/autoversion.vbs",
 			HttpKeyTemplate:     "data/vbscript/httpkey.vbs",
+			HttpKeyTestTemplate: "data/vbscript/httpkey-test.vbs",
 			EnvKeyCode:          "oEnv(\"%s\")",
-			Outfile:             "payload.vbs"}
+			Extension:           ".vbs"}
 	case "jscript":
 		return &PayloadWriter{
 			Language:            "jscript",
@@ -160,8 +166,9 @@ func setupPayloadWriter(lang string) *PayloadWriter {
 			EnvKeyTemplate:      "data/jscript/envkey.js",
 			AutoVersionTemplate: "data/jscript/autoversion.js",
 			HttpKeyTemplate:     "data/jscript/httpkey.js",
+			HttpKeyTestTemplate: "data/jscript/httpkey-test.js",
 			EnvKeyCode:          "oEnv(\"%s\")",
-			Outfile:             "payload.js"}
+			Extension:           ".js"}
 	case "powershell":
 		return &PayloadWriter{
 			Language:            "powershell",
@@ -170,8 +177,9 @@ func setupPayloadWriter(lang string) *PayloadWriter {
 			EnvKeyTemplate:      "data/powershell/envkey.ps1",
 			AutoVersionTemplate: "",
 			HttpKeyTemplate:     "data/powershell/httpkey.ps1",
+			HttpKeyTestTemplate: "data/powershell/httpkey-test.ps1",
 			EnvKeyCode:          "$oEnv.Invoke(\"%s\")",
-			Outfile:             "payload.ps1"}
+			Extension:           ".ps1"}
 	default:
 		return nil
 	}
@@ -215,17 +223,6 @@ func writeFile(filename string, contents []byte) {
 	_, err = f.Write(contents)
 	if err != nil {
 		panic(err)
-	}
-}
-
-func getFilenames(lang string) (string, string) {
-	switch lang {
-	case "vbscript":
-		return "data/keying.vbs", "payload.vbs"
-	case "jscript":
-		return "data/keying.js", "payload.js"
-	default:
-		return "", ""
 	}
 }
 
@@ -310,17 +307,20 @@ func envVarCode(text []byte, envVarCode []string, pw *PayloadWriter) ([]byte, er
 }
 
 // returns the new payload, httpkey, and err
-func httpKeyCode(payload string, config *Config, pw *PayloadWriter) (string, string, error) {
-	httpKey, err := lib.GenerateHttpKey(config.HttpKeyUrl, config.HttpKeyUA)
-	if err != nil {
-		fmt.Printf("[!] Error accessing %s\n%s\n", config.HttpKeyUrl, err)
-		return "", "", err
+func httpKeyCode(httpKey, payload string, config *Config, pw *PayloadWriter) (string, string, error) {
+	if httpKey == "" {
+		var err error
+		httpKey, err = lib.GenerateHttpKey(config.HttpKeyUrl, config.HttpKeyUA)
+		if err != nil {
+			fmt.Printf("[!] Error accessing %s\n%s\n", config.HttpKeyUrl, err)
+			return "", "", err
+		}
 	}
 
 	payloadHash := lib.GenerateSHA512(payload)
 	text, iv, err := lib.AESEncrypt([]byte(httpKey), []byte(payload))
 	if err != nil {
-		fmt.Printf("Error received encrypting: %s", err)
+		fmt.Printf("[!] Error received encrypting: %s\n", err)
 		return "", "", err
 	}
 
@@ -340,7 +340,24 @@ func httpKeyCode(payload string, config *Config, pw *PayloadWriter) (string, str
 	result = bytes.Replace(result, []byte("~HKUSERAGENT~"), []byte(config.HttpKeyUA), 1)
 	result = bytes.Replace(result, []byte("~HKIV~"), []byte(iv), 1)
 
+	httpKeyTestCode(config.HttpKeyUrl, config.HttpKeyUA, httpKey, pw)
+
 	return string(result), httpKey, nil
+}
+
+func httpKeyTestCode(url, ua, httpKey string, pw *PayloadWriter) {
+	contents, err := readFile(pw.HttpKeyTestTemplate)
+	if err != nil {
+		return
+	}
+
+	result := bytes.Replace(contents, []byte("~HTTPKEY~"), []byte(httpKey), 1)
+	result = bytes.Replace(result, []byte("~HKURL~"), []byte(url), 1)
+	result = bytes.Replace(result, []byte("~HKUSERAGENT~"), []byte(ua), 1)
+
+	outfile := "httpkey-tester" + pw.Extension
+	fmt.Printf("[*] Make sure to test the httpkey with %s!\n", outfile)
+	writeFile(outfile, result)
 }
 
 // buildKey builds the final key with env vars, path, etc. and also returns
