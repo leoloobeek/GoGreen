@@ -1,3 +1,12 @@
+Dim ver
+ver = "v4.0.30319"
+On Error Resume Next
+shell.RegRead "HKLM\SOFTWARE\\Microsoft\.NETFramework\v4.0.30319\"
+If Err.Number <> 0 Then
+  ver = "v2.0.50727"
+  Err.Clear
+End If
+shell.Environment("Process").Item("COMPLUS_Version") = ver
 Function binToHex(binary)
     dim dom
     set dom = CreateObject("Microsoft.XMLDOM")
